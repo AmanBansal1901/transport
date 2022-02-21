@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+   <head>
+      <meta charset='utf-8'>
+      <title>N.S</title>
+      <!-- Loading all relevant scripts and stylesheets  -->
+      <!-- Loading relevant leaflet scripts and stylesheets  -->
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+         crossorigin=""/>
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin="">  </script>
+      <!-- Loading relevant locationiq scripts and stylesheets for geocoding  -->
+      <link rel="stylesheet" href="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.css?v=0.1.7">
+      <script src="https://maps.locationiq.com/v2/libs/leaflet-geocoder/1.9.6/leaflet-geocoder-locationiq.min.js?v=0.1.7"></script>
+      <!-- Changing the default styling of location iq geocode results -->
+      <style type="text/css">
+            .leaflet-locationiq-results
+            {
+            color: black;
+            height:300px;
+            }
+      </style>
+      
+      <!-- Loading relevant jquery libraries and bootstrap libraries for toggle mode  -->
+      <link rel = "stylesheet" href = "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity = "sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin = "anonymous">
+      <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+      <script src = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+      <script src = "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity = "sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin = "anonymous"></script>
+      <script src = "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity = "sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin = "anonymous"></script>
+      <!-- Loading stylesheet for webpage  -->
+      <link rel="stylesheet" th:href="@{/static/css/styles.css}">
+      <!-- Loading scripts for canva5 used in traffic display  -->
+      <script th:src="@{static/js/leaflet_canvas_layer.js}"></script>
+      <script th:src="@{static/js/leaflet_tileloader_mixin.js}"></script>
+      <!-- Loading scripts traffic display (fetch and display) -->
+      <script th:src="@{static/js/traffic_disp/traffic_layer.js}"></script>
+      <script th:src="@{static/js/traffic_disp/traffic_fetch.js}"></script>
+      <!-- Loading script for converting string to title case-->
+      <script th:src="@{static/js/text_style/title_case.js}"></script>
+
+   </head>
+   <body style="background-color:#ccd6fa">
+      <div class="heading">
+         <p id="logo">Navigation System</p>
+         <!-- <p id="infotabs">Documentation</p> -->
+      </div>
+      <div class="parent">
+         <div class="inputbox" id="inputbox">
+            <div class="CollapseOps">
+               <button data-toggle="collapse"   data-target="#inputboxfirst" style="outline: none;color:#CAE00F;font-family:lucida sans unicode;border:none;background-color: #007D98;font-size: 25px;" aria-expanded="false">Routing Query</button>
+            </div>
+            <div class="collapse hide" id="inputboxfirst" data-parent="#inputbox">
+               <form id="form1" action="#" th:action="@{/routing}" th:object="${pt}" method="GET" onsubmit="return validateForm()">
+                  <div class="optiongrp" >
+                     <!-- Source and destination search -->
+                     <div class='inputboxcontainer'>
+                        <input type="hidden" id="hid1" th:field="*{StartLoc}">
+                        <input type="hidden" id="hid2" th:field="*{EndLoc}">
+                        <div  id='inputbox1'>
+                           Starting Location:
+                        </div>
+                        <div  id='inputbox2'>
+                           Ending Location:
+                        </div>
+                     </div>
+                     <div>
+                        <!-- Routing types search -->
+                        <input type="radio" th:field="*{RouteType}" id="greenest" name="routes" value="greenest" required>
+                        <label for="greenest" style="background-color:forestgreen;">Greenest Route</label>
+                        <br>
+                        <input type="radio" th:field="*{RouteType}" id="fastest" name="routes" value="fastest" required>
+                        <label style="background-color:indianred;"  for="fastest">Fastest Route</label>
+                        <br>
+                        <input type="radio" th:field="*{RouteType}" id="shortest" name="routes" value="shortest" required>
+                        <label for="shortest" style="background-color:orange;">Shortest Route</label>
+                        <br>
+                        <input type="radio" th:field="*{RouteType}" id="balanced" name="routes" value="balanced" required>
+                        <label for="balanced" style="background-color:royalblue;">Balanced Route</label>
+                        <br>
+                        <input type="radio" th:field="*{RouteType}" id="all" name="routes" value="all" required>
+                        <label for="all" style="background-color:#fbec5d;">All Routes</label>
+                        <br>
+                        <!-- Vehicles types search -->
+                        <div class="parent">
+                           <input type="radio" th:field="*{Vehicle}" id="car" name="vehicles" value="car" required>
+                           <label for="car">Car</label>
+                           <input type="radio" th:field="*{Vehicle}" id="motorcycle" name="vehicles" value="motorcycle" required>
+                           <label for="motorcycle">Motorcycle</label>
+                           <input type="radio" th:field="*{Vehicle}" id="bike" name="vehicles" value="bike" required>
+                           <label for="bike">Bicycle</label>
+                           <input type="radio" th:field="*{Vehicle}" id="foot" name="vehicles" value="foot" required>
+                           <label for="foot">Foot</label>
+                           <input type="radio" th:field="*{Vehicle}" id="pt" name="vehicles" value="pt" required>
+                           <label for="pt">Public Transit</label>
+                        </div>
+                     </div>
+                     <!-- SUBMIT button -->
+                     <button class="options" style="outline: none;border:none; text-align: center; color: black;" > SUBMIT</button>
+                  </div>
+               </form>
+            </div>
+            <!-- Traffic display option -->
+            <div class="inputboxcontainer">
+               <input type="checkbox" id="traffic_disp" name="traffic_disp" value="traffic_disp" onclick="traffic_info()">
+               <label for="traffic_disp"> Traffic layer enable</label>
+            </div>
+         </div>
+         <!-- Map display search -->
+         <div id="mapid"></div>
+      </div>
+   </body>
+   <script type="text/javascript" th:inline="javascript">
+      //Creating leaflet map and adding tile layer
+      // TODO the map view must change based on the OSM file.
+       var bbox=/*[[${bbox}]]*/"";
+      var map = L.map('mapid');
+      map.fitBounds([ [bbox[0],bbox[1]] , [bbox[2],bbox[3]]]);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+     
+      /*
+      Adjusting height of turn by turn navigation instruction box
+      according to height of toggled state of main query box
+      */
+      $('#inputboxfirst').on('shown.bs.collapse', function () {
+      	   if(document.getElementById('instructionBox')!=null)
+      		   {
+      		   document.getElementById('instructionBox').style.height=100%-document.getElementById('mapid').offsetHeight+'px'
+      		   }
+      	   
+      	});
+      	$('#inputboxfirst').on('hidden.bs.collapse', function () {
+      		console.log("Closed")
+      		if(document.getElementById('instructionBox')!=null)
+      		   {
+      		   document.getElementById('instructionBox').style.height=250+'px'
+      		   }
+      		//console.log(document.getElementById('mapid').offsetHeight)
+      	});
+   </script>
+   <script type="text/javascript" th:inline="javascript">
+      /*
+      Adding geocoding feature from mapbox
+      */
+      //Geocoder options
+      var geocoderControlOptions = {
+          expanded: true,         //The geocoder search box will be initialized in expanded mode
+      }
+      //Initialize the geocoder
+      var geocoderControl1 = new L.control.geocoder('pk.87f2d9fcb4fdd8da1d647b46a997c727', geocoderControlOptions).addTo(map)
+      .on('focus', function (e) {
+    	  console.log("hi!!");
+    	  document.getElementById("inputbox2").style.display = "none";
+      })
+      .on('select', function (e) {
+          putValue(document.getElementById('hid1'),e.latlng.lat, e.latlng.lng);
+      })
+      .on('blur', function (e) {
+          console.log("efe2");
+          document.getElementById("inputbox2").style.display = "block";
+      });
+      var geocoderControl2 = new L.control.geocoder('pk.87f2d9fcb4fdd8da1d647b46a997c727', geocoderControlOptions).addTo(map).on('select', function (e) {
+          putValue(document.getElementById('hid2'),e.latlng.lat, e.latlng.lng);
+      });
+      
+      //Get the "search-box" div
+      var searchBoxControl1 = document.getElementById("inputbox1");
+      var searchBoxControl2 = document.getElementById("inputbox2");
+      
+      //Get the geocoder container from the leaflet map
+      var geocoderContainer1 = geocoderControl1.getContainer();
+      var geocoderContainer2 = geocoderControl2.getContainer();
+      //Append the geocoder container to the "searchboxes"
+      searchBoxControl1.appendChild(geocoderContainer1);
+      searchBoxControl2.appendChild(geocoderContainer2);
+      
+   </script>
+   <script>
+   //put value of geocoded lat longs
+   function putValue(container,lat,lng)
+   {
+	   container.value=lng+","+lat;
+	  
+   }
+   </script>
+   <script type="text/javascript" th:inline="javascript">
+      //validate source and destination box with regards to having appropriate values
+      function validateForm() {
+    	if(document.getElementById('hid1').value=="")
+      	{
+      	alert("Please fill starting location correctly");
+      	 return false;
+      	}
+      	if(document.getElementById('hid2').value=="")
+      	{
+      		
+      		alert("Please fill destination location correctly");
+      	 return false;
+      	}
+      	bb=document.getElementById('hid1').value.split(",")
+      	console.log(bbox[0]+","+bb[1])
+      	console.log(bbox[2]<bb[1])
+      	if(bbox[0]>bb[1] || bbox[1]>bb[0] || bbox[2]<bb[1] || bbox[3]<bb[0])
+      	{
+      		alert("Source ("+bb[1]+","+bb[0]+") is out of bounds for the bounding box = ["+bbox[0]+","+bbox[1]+" "+bbox[2]+","+bbox[3]+"]")
+      	return false;
+      	}
+      	bb=document.getElementById('hid2').value.split(",")
+      	if(bbox[0]>bb[1] || bbox[1]>bb[0] || bbox[2]<bb[1] || bbox[3]<bb[0])
+      	{
+      		alert("Source ("+bb[1]+","+bb[0]+") is out of bounds for the bounding box = ["+bbox[0]+","+bbox[1]+" "+bbox[2]+","+bbox[3]+"]")
+      	return false;
+      	}
+      	
+      	}
+      /*
+      Display of routing results
+      */      	
+      function codeAddress() {
+
+          
+      	 var data=/*[[${route}]]*/"";
+      	 
+      	 if(data!=null)
+      		 {
+      		 console.log(data);
+      
+      		 document.getElementById('hid1').value="";
+      		 document.getElementById('hid2').value="";
+      		 const nav_color=["LightCoral","LightGreen","PowderBlue","LightSalmon"];
+      		 const route_color=["red","green","blue","orange"];
+     		 
+      		 let colour=route_color[2];
+      		 if (document.getElementById('greenest').checked) {
+      				colour=route_color[1];
+      				}
+      		 if (document.getElementById('fastest').checked) {
+      				colour=route_color[0];
+      				}
+
+      		 if (document.getElementById('shortest').checked) {
+      				colour=route_color[3];
+      				}
+      		
+      		 var instructionBox=document.createElement('div');
+  			instructionBox.id='instructionBox';
+  			document.getElementById('inputbox').appendChild(instructionBox);
+  			instructionBox.style="background-color:rgb(210 229 219);color:forestgreen;font-size:20px;overflow:auto";
+  			document.getElementById('instructionBox').style.height=250+'px';
+  			instructionBox.innerHTML+="Turn-By-Turn Navigation"
+  			console.log(instructionBox.style.height);
+  			
+      		 for(let j=0;j<data.length;j++)
+      			 {
+      			 if(document.getElementById('all').checked)
+      				 {
+      				 colour=route_color[j];
+      				 }
+      			 for(let i=0;i<data[j].points.length;i++)
+      			{
+      				 
+      				if(i==0)
+      				{
+      					var start = L.marker([data[j].points[i].lat,data[j].points[i].lon]).addTo(map);
+      					start.bindPopup("<b> Source </b>")
+      				}
+      				if(i==data[j].points.length-1)
+      				{
+      					var end = L.marker([data[j].points[i].lat,data[j].points[i].lon]).addTo(map);
+      					end.bindPopup("<b> Destination </b>")
+      					break;
+      				}
+      				var pointA=new L.LatLng(data[j].points[i].lat,data[j].points[i].lon);
+      				var pointB=new L.LatLng(data[j].points[i+1].lat,data[j].points[i+1].lon);
+      				var pointList=[pointA,pointB];
+      				var edge=new L.Polyline(pointList);
+      				edge.setStyle({
+      				    color: colour
+      				});
+      		        edge.addTo(map);
+      			}
+      			//creating and adding instruction box to inputbox for turn by turn instructions
+      			for(let i=0;i<data[j].navigationInstruction.length;i++)
+      			{
+      				let instruction=document.createElement('div');
+      				instruction.id=i;
+      				instruction.style="border:1px dotted black; color:black;font-size:10px"
+      				if(data.length>1)
+      					{
+      					instruction.style.backgroundColor=nav_color[j];
+      					}
+      				instruction.innerHTML+="<b>"+(i+1)+" "+toTitleCase(data[j].navigationInstruction[i])+"</b>";
+      				document.getElementById('instructionBox').appendChild(instruction);
+      			}
+      			
+      			 }
+      		 }
+      	}
+      	
+      window.onload =codeAddress;
+   </script>
+</html>
